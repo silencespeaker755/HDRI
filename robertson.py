@@ -8,7 +8,7 @@ def optimize_E(Z, height, width, g_func, weight, time_seq, channel):
     # time_seq: exposure time, datatype:list[time]
     # Ei = sum(w(Zij) * g(Zij) * t) / sum(w(Zij) * t^2)
     print('Start optimize_E')
-    print(type(height))
+    # print(type(height))
     Ei = np.zeros((height, width)) 
     for y in range(height):
         for x in range(width):
@@ -64,12 +64,12 @@ if __name__ == '__main__':
     weight = np.exp(-4 *  np.square(np.arange(256) - 127.5) / 127.5 / 127.5)
     plt.plot(np.arange(256), initial_g) 
     plt.title('Initial g')
-    plt.savefig('initial_g.png')
+    plt.savefig('RobertsonData/initial_g.png')
     plt.clf()
     
     plt.plot(np.arange(256), weight)
     plt.title('Weight')
-    plt.savefig('weight.png') 
+    plt.savefig('RobertsonData/weight.png') 
     plt.clf()
 # read images: i images of differet exposure time, each with 3 channels (Z[i][y][x][channel])
     LDR_images, exposure_times = read_images('Photos/JPG/')
@@ -86,23 +86,29 @@ if __name__ == '__main__':
         LDR_images_quarter.append(img)
     # plt.imshow(LDR_images_quarter[0][:,:,::-1])
 
-    Eis = []
-    gms = []
-    Ei = optimize_E(LDR_images_quarter, height, width, initial_g, weight, exposure_times, channel = 0)
-    epoch = 3
+    # Eis = []
+    # gms = []
+    Ei = np.zeros((height, width)) 
+    gm = initial_g #first epoch: use initial g
+    epoch = 10
     for i in range(epoch):
-        gm = optimize_g(LDR_images_quarter, height, width, Ei, exposure_times, channel = 0)
-        gms.append(gm)
-        #   plt.imshow(Ei, cmap = 'jet')
-        title = 'gm_'.format(i)
-        plt.plot(np.arange(256),gm) 
-        plt.title(title)
-        plt.savefig()
-        plt.clf()
-        Ei = optimize_E(LDR_images_quarter, height, width, gm, weight, exposure_times, channel = 0)
-        Eis.append(Ei)
-        title = 'Ei_'.format(i)
-        plt.title(title)
-        plt.imsave(title+'.png', Ei)
-        plt.clf()
+        print('\n=====epoch:{}'.format(i))
+        for c in range(3):
+            Ei = optimize_E(LDR_images_quarter, height, width, gm, weight, exposure_times, channel = c)
+            # Eis.append(Ei)
+            title = 'Ei_{}_c{}'.format(i, c)
+            plt.title(title)
+            plt.imsave('RobertsonData/' + title + '.png', Ei)
+            np.savetxt('RobertsonData/' + title + '.txt', gm)
+            plt.clf()
+            gm = optimize_g(LDR_images_quarter, height, width, Ei, exposure_times, channel = c)
+            # gms.append(gm)
+            #   plt.imshow(Ei, cmap = 'jet')
+            title = 'gm_{}_c{}'.format(i, c)
+            plt.plot(np.arange(256),gm) 
+            plt.title(title)
+            plt.savefig('RobertsonData/' + title + '.png')
+            np.savetxt('RobertsonData/' + title + '.txt', gm)
+            plt.clf()
+            
 
