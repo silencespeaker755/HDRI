@@ -86,24 +86,22 @@ if __name__ == '__main__':
         LDR_images_quarter.append(img)
     # plt.imshow(LDR_images_quarter[0][:,:,::-1])
 
-    # Eis = []
-    # gms = []
-    Ei = np.zeros((height, width)) 
-    gm = initial_g #first epoch: use initial g
     epoch = 10
-    for i in range(epoch):
-        print('\n=====epoch:{}'.format(i))
-        for c in range(3):
+    for c in range(3):
+        print('\n=====channel:{}'.format(c))
+        Ei = np.zeros((height, width)) 
+        gm = initial_g #first epoch: use initial g
+        for i in range(epoch):
+            print('\n=====epoch:{}'.format(i))
+
             Ei = optimize_E(LDR_images_quarter, height, width, gm, weight, exposure_times, channel = c)
-            # Eis.append(Ei)
             title = 'Ei_{}_c{}'.format(i, c)
             plt.title(title)
             plt.imsave('RobertsonData/' + title + '.png', Ei)
-            np.savetxt('RobertsonData/' + title + '.txt', gm)
+            np.savetxt('RobertsonData/' + title + '.txt', Ei)
             plt.clf()
+
             gm = optimize_g(LDR_images_quarter, height, width, Ei, exposure_times, channel = c)
-            # gms.append(gm)
-            #   plt.imshow(Ei, cmap = 'jet')
             title = 'gm_{}_c{}'.format(i, c)
             plt.plot(np.arange(256),gm) 
             plt.title(title)
