@@ -46,8 +46,9 @@ def optimize_g(Z, height, width, E_func, expo_time, channel):
 
     # print(gm)
     return gm
+
 import os
-def my_read_images(image_dir):
+def my_read_images(image_dir): # for reading memorial images (exposure time was not written in properties)
     paths = [os.path.join(image_dir, file) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))]
     LDR_images = []
     for path in paths:
@@ -57,12 +58,12 @@ def my_read_images(image_dir):
 
     # transform LDR_images into np array
     LDR_images = np.array(LDR_images)
-    time_seq = [0] * 16 # 5 ~ -10
-    time_seq[0] = 32
+    exposure_time = [0] * 16 # 2^5 ~ 2^-10
+    exposure_time[0] = 32
     for i in range(1, 16, 1):
-        time_seq[i] = time_seq[i-1] / 2
+        exposure_time[i] = exposure_time[i-1] / 2
     
-    return LDR_images, time_seq
+    return LDR_images, exposure_time
 
 if __name__ == '__main__':
    
@@ -81,6 +82,7 @@ if __name__ == '__main__':
     plt.clf()
     # read images: i images of differet exposure time, each with 3 channels (Z[i][y][x][channel])
     LDR_images, exposure_times = my_read_images('Photos/memorial/')
+    # LDR_images, exposure_times = read_images('Photos/JPG/')
     print(LDR_images.shape)
     
     height = LDR_images.shape[1]
