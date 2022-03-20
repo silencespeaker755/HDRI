@@ -3,7 +3,7 @@ import cv2
 from matplotlib import pyplot as plt 
 from imageIO import read_images
 
-def optimize_E(Z, height, width, g_func, weight, time_seq, channel): 
+def optimize_E(Z, height, width, g_func, weight, expo_time, channel): 
     # Z: images of channel at different time, datatype:list[time][y][x][channel]
     # time_seq: exposure time, datatype:list[time]
     # Ei = sum(w(Zij) * g(Zij) * t) / sum(w(Zij) * t^2)
@@ -14,10 +14,10 @@ def optimize_E(Z, height, width, g_func, weight, time_seq, channel):
         for x in range(width):
             sum1 = 0
             sum2 = 0
-            for t_idx in range(len(time_seq)):
+            for t_idx in range(len(expo_time)):
                 z_pixel = Z[t_idx][y][x][channel]
                 w = weight[z_pixel]
-                t = time_seq[t_idx]
+                t = expo_time[t_idx]
                 sum1 += w * g_func[z_pixel] * t
                 sum2 += w * t * t
             Ei[y][x] = sum1 / sum2
@@ -25,36 +25,44 @@ def optimize_E(Z, height, width, g_func, weight, time_seq, channel):
    
     return Ei
 
-def optimize_g(Z, height, width, E_func, time_seq, channel):
+def optimize_g(Z, height, width, E_func, expo_time, channel):
     # g(z_pixel) = 1/cnt * sum(all pixel's E value * t in time t)
-    # print('3:\n', E_func)
-    # for y in range(height):
-    #     for x in range(width):
-    #         if(E_func[y][x] < 0):
-                # print(E_func[y][x])
     print('Start optimize_g')
     gm = np.zeros(256) 
+    Em = np.zeros((256, 2))
+    for t_idx in range(len(expo_time)):
+        # print('time: {}'.format(time_seq[t_idx]))
+        for y in range(height):
+            for x in range(width):
+                # print('pixel: {}, {}: {}'.format(y, x, E_func[y][x]))
+                m = Z[t_idx][y][x][channel]
+                Em[m][0] += E_func[y][x] * expo_time[t_idx] #sum
+                Em[m][1] += 1 # cnt
+
     for m in range(256):
-        # print('\n====find g({})'.format(m))
-        sum = 0
-        cnt = 0
-        for t_idx in range(len(time_seq)):
-            # print('time: {}'.format(time_seq[t_idx]))
-            for y in range(height):
-                for x in range(width):
-                    # print('pixel: {}, {}: {}'.format(y, x, E_func[y][x]))
-                    if(m == Z[t_idx][y][x][channel]):
-                        cnt += 1
-                        sum += E_func[y][x] * time_seq[t_idx]
-                        # print('add sum:{} * {} = {}'.format(E_func[y][x], time_seq[t_idx], sum))
-        # print('cnt:{}, sum:{}'.format(cnt, sum))
-        # input()
-        if(cnt == 0): gm[m] = 0
-        else:    gm[m] = sum / cnt
-        print('g{}: {}'.format(m, gm[m]))
+        if(Em[m][1] != 0): gm[m] = Em[m][0] / Em[m][1]
     
-    print(gm)
+    gm /= gm[128] #normalize
+
+    # print(gm)
     return gm
+import os
+def my_read_images(image_dir):
+    paths = [os.path.join(image_dir, file) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))]
+    LDR_images = []
+    for path in paths:
+        # read image and append images into LDR list
+        img = cv2.imread(path)
+        LDR_images.append(img)
+
+    # transform LDR_images into np array
+    LDR_images = np.array(LDR_images)
+    time_seq = [0] * 16 # 5 ~ -10
+    time_seq[0] = 32
+    for i in range(1, 16, 1):
+        time_seq[i] = time_seq[i-1] / 2
+    
+    return LDR_images, time_seq
 
 if __name__ == '__main__':
    
@@ -71,42 +79,62 @@ if __name__ == '__main__':
     plt.title('Weight')
     plt.savefig('RobertsonData/weight.png') 
     plt.clf()
-# read images: i images of differet exposure time, each with 3 channels (Z[i][y][x][channel])
-    LDR_images, exposure_times = read_images('Photos/JPG/')
+    # read images: i images of differet exposure time, each with 3 channels (Z[i][y][x][channel])
+    LDR_images, exposure_times = my_read_images('Photos/memorial/')
     print(LDR_images.shape)
+    
+    height = LDR_images.shape[1]
+    width = LDR_images.shape[2]
+    #scale down to speed up
+    # height = (int)(height / 8)
+    # width = (int)(width / 8)
+    # print('width:{}, height:{}'.format(width, height))
+    # LDR_images_quarter = []
 
-    width = (int)(LDR_images.shape[2] / 8)
-    height = (int)(LDR_images.shape[1] / 8)
-    print('width:{}, height:{}'.format(width, height))
-    LDR_images_quarter = []
+    # for i in range(len(LDR_images)):
+    #     img = LDR_images[i]
+    #     img = cv2.resize(img, dsize = (width, height), interpolation=cv2.INTER_NEAREST)
+    #     LDR_images_quarter.append(img)
+        
+    epoch = 8
+    Ec = np.zeros((3, height, width))
 
-    for i in range(len(LDR_images)):
-        img = LDR_images[i]
-        img = cv2.resize(img, dsize = (width, height), interpolation=cv2.INTER_NEAREST)
-        LDR_images_quarter.append(img)
-    # plt.imshow(LDR_images_quarter[0][:,:,::-1])
-
-    epoch = 10
+    channel_str = ['b', 'g', 'r']
     for c in range(3):
         print('\n=====channel:{}'.format(c))
         Ei = np.zeros((height, width)) 
         gm = initial_g #first epoch: use initial g
         for i in range(epoch):
             print('\n=====epoch:{}'.format(i))
+            Ei = optimize_E(LDR_images, height, width, gm, weight, exposure_times, channel = c)
+            gm = optimize_g(LDR_images, height, width, Ei, exposure_times, channel = c)      
 
-            Ei = optimize_E(LDR_images_quarter, height, width, gm, weight, exposure_times, channel = c)
-            title = 'Ei_{}_c{}'.format(i, c)
-            plt.title(title)
-            plt.imsave('RobertsonData/' + title + '.png', Ei)
-            np.savetxt('RobertsonData/' + title + '.txt', Ei)
-            plt.clf()
+        # save Ei
+        title = 'Ei_{}'.format(channel_str[c])
+        plt.title(title)
+        plt.imsave('RobertsonData/' + title + '.png', Ei, cmap = 'jet')
+        np.savetxt('RobertsonData/' + title + '.txt', Ei)
+        plt.clf()
 
-            gm = optimize_g(LDR_images_quarter, height, width, Ei, exposure_times, channel = c)
-            title = 'gm_{}_c{}'.format(i, c)
-            plt.plot(np.arange(256),gm) 
-            plt.title(title)
-            plt.savefig('RobertsonData/' + title + '.png')
-            np.savetxt('RobertsonData/' + title + '.txt', gm)
-            plt.clf()
-            
+        #save g curve
+        title = 'gm_{}'.format(channel_str[c])
+        plt.plot(np.arange(256),gm) 
+        plt.title(title)
+        plt.savefig('RobertsonData/' + title + '.png')
+        np.savetxt('RobertsonData/' + title + '.txt', gm)
+        plt.clf()
+        
+        # put Ei into channel
+        Ec[c] = Ei
+    
+    # combine 3 channel Ei values to HDR
+    hdr = np.zeros((height, width, 3))
+    for y in range(height):
+        for x in range(width):
+            for c in range(3):
+               hdr[y][x][c] = Ec[c][y][x]
+
+    # save hdr image
+    cv2.imwrite('test.hdr',hdr.astype(np.float32))
+
 
