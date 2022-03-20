@@ -35,6 +35,6 @@ def transform_exif_fraction_to_float(fraction):
     if(len(numbers) == 1):
         return numbers[0]
     else:
-        numbers[1] = 1<<(numbers[1]-1).bit_length()
+        numbers[1] = 1<<(int(numbers[1])-1).bit_length()
 
     return numbers[0]/numbers[1]
