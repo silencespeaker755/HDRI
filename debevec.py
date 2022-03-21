@@ -84,6 +84,9 @@ class Debevec:
     @threaded
     def reconstruct_irradiance_image(self, image, irradiance_map, output):
         exposure_time_ln = [np.log(p) for p in self.exposure_times]
+        print(self.exposure_times)
+        print(exposure_time_ln)
+        
 
         image = image.T
         pixels, samples = image.shape
@@ -101,7 +104,6 @@ class Debevec:
                 result.append(total_Ei / total_weight)
                 pbar.update(1)
         
-        result = np.array(np.power(2, result))
-        np.reshape(result, self.shape)
+        result = np.array(np.exp(result))
         
-        np.save(output, result)
+        np.save(output, result.reshape(self.shape))

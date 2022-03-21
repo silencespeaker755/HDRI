@@ -38,3 +38,6 @@ def transform_exif_fraction_to_float(fraction):
         numbers[1] = 1<<(int(numbers[1])-1).bit_length()
 
     return numbers[0]/numbers[1]
+
+def save_HDR_images(image, output):
+    cv2.imwrite(output, image)
