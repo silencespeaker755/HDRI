@@ -142,7 +142,7 @@ if __name__ == '__main__':
     LDR_images_quarter = np.array(LDR_images_quarter)
     
     rb = RobertsonHDR(LDR_images_quarter, exposure_times, 256)
-    dir = 'RobertsonData/Tiger_40epoch/'
+    dir = 'RobertsonDatas/Tiger_40epoch/'
     rb.process_radiance_map(epoch = 40)
     # rb.load_gCurves_from_file([dir + 'gm_b.txt',dir + 'gm_g.txt',dir + 'gm_r.txt' ])
     # rb.process_radiance_map()
