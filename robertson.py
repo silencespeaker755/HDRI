@@ -92,8 +92,8 @@ class RobertsonHDR:
             gm = self.optimize_g(Ei, channel)      
 
         # save radianceMap
-        self.gCurves[c] = gm
-        self.radianceMaps[c] = Ei
+        self.gCurves[channel] = gm
+        self.radianceMaps[channel] = Ei
     
     def load_gCurves_from_file(self, files):
         channel = 0
@@ -119,9 +119,9 @@ class RobertsonHDR:
 if __name__ == '__main__':
     
     # initial g function is chosen as a linear function with g(128) = 0
-    initial_g = np.arange(256) / 128
+    # initial_g = np.arange(256) / 128
     # setup weighting function: w(Zij) = exp(-4 * (Zij - 127.5)^2 / 127.5^2)
-    weight = np.exp(-4 *  np.square(np.arange(256) - 127.5) / 127.5 / 127.5)
+    # weight = np.exp(-4 *  np.square(np.arange(256) - 127.5) / 127.5 / 127.5)
 
     # read images: i images of differet exposure time, each with 3 channels (Z[i][y][x][channel])
     # LDR_images, exposure_times = my_read_images('Photos/memorial/')
@@ -153,7 +153,7 @@ if __name__ == '__main__':
         title = 'Ei_{}'.format(channel_str[c])
         plt.title(title)
         plt.imsave(dir + title + '.png', np.log(rb.radianceMaps[c] + 1e-8), cmap = 'jet')
-        np.savetxt(dir + title + '.txt', rb.radianceMaps[c])
+        # np.savetxt(dir + title + '.txt', rb.radianceMaps[c])
         plt.clf()
         #save g curve
         title = 'gm_{}'.format(channel_str[c])
