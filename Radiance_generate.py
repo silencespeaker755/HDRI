@@ -11,7 +11,7 @@ from robertson import RobertsonHDR
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-s", "--source_dir", default="Photos/JPG")
-    parser.add_argument("-d", "--save_dir", default="./DebevecData")
+    parser.add_argument("-d", "--save_dir", default="DebevecData")
     parser.add_argument("-m", "--method", default="debevec")
     parser.add_argument("-r", "--radiance", default="Radiance")
     parser.add_argument("-g", "--inverse_response_curve", default="Inverse_CRF")
