@@ -20,7 +20,7 @@ def my_read_images(image_dir): # for reading memorial images (exposure time was 
     exposure_time[0] = 32
     for i in range(1, 16, 1):
         exposure_time[i] = exposure_time[i-1] / 2
-    print(exposure_time)
+    # print(exposure_time)
     return LDR_images, exposure_time
 
 class RobertsonHDR:
@@ -44,6 +44,7 @@ class RobertsonHDR:
         # time_seq: exposure time, datatype:list[time]
         # Ei = sum(w(Zij) * g(Zij) * t) / sum(w(Zij) * t^2)
         print('Start optimize_E')
+                
         Ei = np.zeros((self.height, self.width))
         for y in range(self.height):
             for x in range(self.width):
@@ -130,8 +131,8 @@ if __name__ == '__main__':
     height = LDR_images.shape[1]
     width = LDR_images.shape[2]
     #scale down to speed up
-    height = (int)(height / 8)
-    width = (int)(width / 8)
+    # height = (int)(height / 2)
+    # width = (int)(width / 2)
     print('width:{}, height:{}'.format(width, height))
     LDR_images_quarter = []
 
@@ -143,10 +144,11 @@ if __name__ == '__main__':
     
     rb = RobertsonHDR(LDR_images_quarter, exposure_times, 256)
     dir = 'RobertsonDatas/tiger_40epoch/'
-    # rb.process_radiance_map(epoch = 2)
+    # rb.process_radiance_map(epoch = 5)
     rb.load_gCurves_from_file([dir + 'gm_b.npy',dir + 'gm_g.npy',dir + 'gm_r.npy' ])
     # rb.load_radiance_maps_from_file([dir + 'Ei_b.npy',dir + 'Ei_g.npy',dir + 'Ei_r.npy' ])
-    rb.process_radiance_map()
+    # rb.process_radiance_map()
+    
     channel_str = ['b', 'g', 'r']
 
     for c in range(3):
@@ -166,7 +168,7 @@ if __name__ == '__main__':
 
     hdr = rb.get_HDR_image()
     # save hdr image
-    cv2.imwrite(dir + 'test.hdr',hdr.astype(np.float32))
+    cv2.imwrite(dir + 'test.hdr',hdr)
     ldr = ToneMapping.photographic_global(hdr, a=0.5)
     cv2.imwrite(dir + 'Ldr_photographic_global.jpg', ldr)
     ldr = ToneMapping.photographic_local(hdr, a=0.7, epsilon=0.01, scale_max=25, p=20.0)
