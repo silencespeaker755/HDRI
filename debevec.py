@@ -76,6 +76,7 @@ class Debevec:
     def threaded(fn):
         def wrapper(*args):
             thread = Thread(target=fn, args=args)
+            thread.daemon = True
             return thread
         return wrapper
     

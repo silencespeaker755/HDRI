@@ -50,7 +50,6 @@ if __name__ == "__main__":
         # execute thread mission
         for mission in threading_missions:
             mission.start()
-            mission.join()
         
         for mission in threading_missions:
             mission.join()
