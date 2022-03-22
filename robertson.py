@@ -64,7 +64,7 @@ class RobertsonHDR:
         # print(gm)
         return gm
 
-    def solve(self, channel, savefile, epoch = 8): #optimize g, Ei
+    def solve(self, channel, epoch = 8): #optimize g, Ei
         
         print('\n=====solve channel:{}'.format(channel))
         Ei = np.zeros((self.height, self.width))
