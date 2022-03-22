@@ -25,9 +25,9 @@ if __name__ == "__main__":
     # for output radiance map
     prefix = args.radiance
     crf = args.inverse_response_curve
-    outputs_format = [  {"CRF": f"{crf}_B", "radiance": f"{prefix}_B", "color": "blue"},  \
-                        {"CRF": f"{crf}_G", "radiance": f"{prefix}_G", "color": "green"}, \
-                        {"CRF": f"{crf}_R", "radiance": f"{prefix}_R", "color": "red"} ]
+    outputs_format = [  {"CRF": f"{crf}_B.png", "radiance": f"{prefix}_B.npy", "color": "blue"},  \
+                        {"CRF": f"{crf}_G.png", "radiance": f"{prefix}_G.npy", "color": "green"}, \
+                        {"CRF": f"{crf}_R.png", "radiance": f"{prefix}_R.npy", "color": "red"} ]
     outputs_format = np.array(outputs_format)
 
 
@@ -44,7 +44,7 @@ if __name__ == "__main__":
             # get report's data store directory
             irradiance_map = debevec.generate_inverse_response_curve(sample_points=image[:, points])
             draw_inverse_response_curve(irradiance_map, os.path.join(target_dir , outputs_format[index]["CRF"]), color=outputs_format[index]["color"])
-            mission = debevec.reconstruct_irradiance_image(image, irradiance_map, outputs_format[index]["radiance"])
+            mission = debevec.reconstruct_irradiance_image(image, irradiance_map, os.path.join(target_dir , outputs_format[index]["radiance"]))
             threading_missions.append(mission)
 
         # execute thread mission
@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     else:
         rb = RobertsonHDR(LDR_images, exposure_times, 256)
-        rb.process_radiance_map([t["radiance"] for t in outputs_format], epoch = args.epoch)
+        rb.process_radiance_map([os.path.join(target_dir , t["radiance"]) for t in outputs_format], epoch = args.epoch)
 
         for index, output in enumerate(outputs_format):
             draw_inverse_response_curve(rb.gCurves[index], os.path.join(target_dir , output["CRF"]), color=output["color"])
