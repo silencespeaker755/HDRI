@@ -70,7 +70,6 @@ class Debevec:
             current_row += 1
 
         x = np.linalg.lstsq(A, B, rcond=None)[0]
-        print(x.shape)
     
         return x[:256]
     
@@ -84,8 +83,6 @@ class Debevec:
     @threaded
     def reconstruct_irradiance_image(self, image, irradiance_map, output):
         exposure_time_ln = [np.log(p) for p in self.exposure_times]
-        print(self.exposure_times)
-        print(exposure_time_ln)
         
 
         image = image.T
