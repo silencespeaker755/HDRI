@@ -2,7 +2,7 @@ import numpy as np
 import os
 from matplotlib import pyplot as plt
 
-def draw_irradiance_map(irradiance_map, output_file, color):
+def draw_inverse_response_curve(irradiance_map, output_file, color):
     plt.plot(np.arange(256), irradiance_map, color=color)
     plt.title('Irradience')
     plt.xlabel("pixel value")

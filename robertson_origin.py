@@ -5,6 +5,23 @@ from matplotlib import pyplot as plt
 from imageIO import read_images
 from toneMapping import ToneMapping
 import os
+def my_read_images(image_dir): # for reading memorial images (exposure time was not written in properties)
+    paths = [os.path.join(image_dir, file) for file in sorted(os.listdir(image_dir)) if os.path.isfile(os.path.join(image_dir, file))]
+    LDR_images = []
+    for path in paths:
+        # read image and append images into LDR list
+        img = cv2.imread(path)
+        LDR_images.append(img)
+        print(path)
+
+    # transform LDR_images into np array
+    LDR_images = np.array(LDR_images)
+    exposure_time = [0] * 16 # 2^5 ~ 2^-10``
+    exposure_time[0] = 32
+    for i in range(1, 16, 1):
+        exposure_time[i] = exposure_time[i-1] / 2
+    # print(exposure_time)``
+    return LDR_images, exposure_time
 
 class RobertsonHDR:
     def __init__(self, images, exposure_time, ldr_size):
@@ -64,7 +81,7 @@ class RobertsonHDR:
         # print(gm)
         return gm
 
-    def solve(self, channel, savefile, epoch = 8): #optimize g, Ei
+    def solve(self, channel, epoch = 8): #optimize g, Ei
         
         print('\n=====solve channel:{}'.format(channel))
         Ei = np.zeros((self.height, self.width))
@@ -89,18 +106,69 @@ class RobertsonHDR:
             self.gCurves[channel] = np.load(path)
             channel += 1
 
-    def process_radiance_map(self, savefiles, epoch = 10):
+    def process_radiance_map(self, epoch = 10):
         for c in range(3):
             if(np.any(np.isnan(self.gCurves[c]))):
                 self.solve(c, epoch)
-                np.save(savefiles[c], self.radianceMaps[c])
             else:
                 self.radianceMaps[c] = self.optimize_E(self.gCurves[c], c)
                 
 
     def get_HDR_image(self):
         # combine 3 channel Ei values to HDR
-        B, G, R = self.radianceMaps
-        hdr = cv2.merge([B, G, R])
+        hdr = np.zeros((height, width, 3))
+        for c in range(3):
+            hdr[:,:,c] = self.radianceMaps[c]
         
         return hdr
+
+if __name__ == '__main__':
+
+    # read images: i images of differet exposure time, each with 3 channels (Z[i][y][x][channel])
+    # LDR_images, exposure_times = my_read_images('Photos/memorial/')
+    LDR_images, exposure_times = read_images('Photos/JPG/')
+
+    height, width = LDR_images.shape[1:3]
+    #scale down to speed up
+    # height = (int)(height / 2)
+    # width = (int)(width / 2)
+    # print('width:{}, height:{}'.format(width, height))
+    # LDR_images_quarter = []
+
+    # for i in range(len(LDR_images)):
+    #     img = LDR_images[i]
+    #     img = cv2.resize(img, dsize = (width, height), interpolation=cv2.INTER_NEAREST)
+    #     LDR_images_quarter.append(img)
+    # LDR_images_quarter = np.array(LDR_images_quarter)
+    
+    dir = 'RobertsonDatas/tiger_40epoch/'
+    rb = RobertsonHDR(LDR_images, exposure_times, 256)
+    rb.process_radiance_map(epoch = 5)
+    # rb.load_gCurves_from_file([dir + 'gm_b.npy',dir + 'gm_g.npy',dir + 'gm_r.npy' ])
+    # rb.load_radiance_maps_from_file([dir + 'Ei_b.npy',dir + 'Ei_g.npy',dir + 'Ei_r.npy' ])
+    # rb.process_radiance_map()
+    
+    channel_str = ['b', 'g', 'r']
+
+    # for c in range(3):
+    #     # save Ei
+    #     title = 'Ei_{}'.format(channel_str[c])
+    #     plt.title(title)
+    #     plt.imsave(dir + title + '.png', np.log(rb.radianceMaps[c] + 1e-8), cmap = 'jet')
+    #     np.save(dir + title + '.npy', rb.radianceMaps[c])
+    #     plt.clf()
+    #     #save g curve
+    #     title = 'gm_{}'.format(channel_str[c])
+    #     plt.plot(np.arange(256),np.log(rb.gCurves[c] + 1e-8)) 
+    #     plt.title(title)
+    #     plt.savefig(dir + title + '.png')
+    #     np.save(dir + title + '.npy', rb.gCurves[c])
+    #     plt.clf()
+
+    hdr = rb.get_HDR_image()
+    # save hdr image
+    cv2.imwrite(dir + 'test.hdr',hdr)
+    ldr = ToneMapping.photographic_global(hdr, a=0.5)
+    cv2.imwrite(dir + 'Ldr_photographic_global.jpg', ldr)
+    ldr = ToneMapping.photographic_local(hdr, a=0.7, epsilon=0.01, scale_max=25, p=20.0)
+    cv2.imwrite(dir + 'Ldr_photographic_local.jpg', ldr)

@@ -35,7 +35,7 @@ class Debevec:
         self.select_point = random.sample(range(total_number), select_number)
         return self.select_point
 
-    def generate_irradiance_map(self, sample_points):
+    def generate_inverse_response_curve(self, sample_points):
         # initialize the matrix
         image_number, n = sample_points.shape
         A = np.zeros(shape=(n*image_number+1+254, 256+n))
@@ -76,7 +76,6 @@ class Debevec:
     def threaded(fn):
         def wrapper(*args):
             thread = Thread(target=fn, args=args)
-            thread.start()
             return thread
         return wrapper
     
