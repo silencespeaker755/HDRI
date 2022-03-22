@@ -5,20 +5,20 @@ from toneMapping import ToneMapping
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-b", "--blue"   , default="./Inverse_CRF_B.npy")
-    parser.add_argument("-g", "--green"  , default="./Inverse_CRF_G.npy")
-    parser.add_argument("-r", "--red"    , default="./Inverse_CRF_R.npy")
+    parser.add_argument("-b", "--blue"   , default="./DebevecData/Radiance_B.npy")
+    parser.add_argument("-g", "--green"  , default="./DebevecData/Radiance_G.npy")
+    parser.add_argument("-r", "--red"    , default="./DebevecData/Radiance_R.npy")
     parser.add_argument("-d", "--dir"    , default="./DebevecData")
     parser.add_argument("-m", "--method"    , default="global")
-    parser.add_argument("-o", "--output" , default="HDR.hdr")
+    parser.add_argument("-o", "--output" , default="LDR.png")
     args = parser.parse_args()
 
     target_dir = args.dir
     method = args.method
 
-    B = np.load(os.path.join(target_dir, args.blue))
-    G = np.load(os.path.join(target_dir, args.green))
-    R = np.load(os.path.join(target_dir, args.red))
+    B = np.load(args.blue)
+    G = np.load(args.green)
+    R = np.load(args.red)
 
     hdr = cv2.merge([B, G, R])
 
