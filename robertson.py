@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import cv2
+from threading import Thread
 
 class RobertsonHDR:
     def __init__(self, images, exposure_time, ldr_size):
@@ -22,9 +23,8 @@ class RobertsonHDR:
         # Z: images of channel at different time, datatype:list[time][y][x][channel]
         # time_seq: exposure time, datatype:list[time]
         # Ei = sum(w(Zij) * g(Zij) * t) / sum(w(Zij) * t^2)
-        print('Start optimize_E')
-                
         Ei = np.zeros((self.height, self.width))
+        
         for y in range(self.height):
             for x in range(self.width):
                 sum1 = 0
@@ -41,9 +41,9 @@ class RobertsonHDR:
 
     def optimize_g(self, E_func, channel):
         # g(z_pixel) = 1/cnt * sum(all pixel's E value * t in time t)
-        print('Start optimize_g')
         gm = np.zeros(self.ldr_size) 
         Em = np.zeros((self.ldr_size, 2))
+        
         for t_idx in range(len(self.expo_time)):
             # print('time: {}'.format(time_seq[t_idx]))
             for y in range(self.height):
@@ -60,13 +60,21 @@ class RobertsonHDR:
         # print(gm)
         return gm
 
+    def threaded(fn):
+        def wrapper(*args):
+            thread = Thread(target=fn, args=args)
+            thread.daemon = True
+            return thread
+        return wrapper
+    
+    @threaded
     def solve(self, channel, epoch = 8): #optimize g, Ei
         
-        print('\n=====solve channel:{}'.format(channel))
         Ei = np.zeros((self.height, self.width))
         gm = np.arange(self.ldr_size) / self.ldr_size / 2 # initial g function is chosen as a linear function with g(128) = 0
+      
         for i in range(epoch):
-            print('\n=====epoch:{}'.format(i))
+            print('=====channel:{} epoch:{}'.format(channel, i))
             Ei = self.optimize_E(gm, channel)
             gm = self.optimize_g(Ei, channel)      
 
@@ -86,13 +94,20 @@ class RobertsonHDR:
             channel += 1
 
     def process_radiance_map(self, savefiles, epoch = 10):
+        threading_missions = []
         for c in range(3):
-            if(np.any(np.isnan(self.gCurves[c]))):
-                self.solve(c, epoch)
-                np.save(savefiles[c], self.radianceMaps[c])
-            else:
-                self.radianceMaps[c] = self.optimize_E(self.gCurves[c], c)
-                
+            mission = self.solve(c, epoch)
+            threading_missions.append(mission)
+        
+        # execute thread mission
+        for mission in threading_missions:
+            mission.start()
+        
+        for mission in threading_missions:
+            mission.join()
+
+        for c in range(3):        
+            np.save(savefiles[c], self.radianceMaps[c])
 
     def get_HDR_image(self):
         # combine 3 channel Ei values to HDR
