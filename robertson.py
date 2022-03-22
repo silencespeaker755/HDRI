@@ -31,8 +31,6 @@ class RobertsonHDR:
         self.height = images.shape[1]
         self.width = images.shape[2]
         self.weight = self.setup_weight(ldr_size)
-        plt.plot(np.arange(256), self.weight)
-        plt.show()
         self.radianceMaps = np.zeros((3, self.height, self.width))
         self.gCurves = np.full((3, ldr_size), np.nan)
 
@@ -113,6 +111,7 @@ class RobertsonHDR:
                 self.solve(c, epoch)
             else:
                 self.radianceMaps[c] = self.optimize_E(self.gCurves[c], c)
+                
 
     def get_HDR_image(self):
         # combine 3 channel Ei values to HDR
@@ -123,11 +122,6 @@ class RobertsonHDR:
         return hdr
 
 if __name__ == '__main__':
-    
-    # initial g function is chosen as a linear function with g(128) = 0
-    # initial_g = np.arange(256) / 128
-    # setup weighting function: w(Zij) = exp(-4 * (Zij - 127.5)^2 / 127.5^2)
-    # weight = np.exp(-4 *  np.square(np.arange(256) - 127.5) / 127.5 / 127.5)
 
     # read images: i images of differet exposure time, each with 3 channels (Z[i][y][x][channel])
     # LDR_images, exposure_times = my_read_images('Photos/memorial/')
