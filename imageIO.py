@@ -1,6 +1,7 @@
 import numpy as np
 import cv2, exifread
 import os
+import math
 
 def read_images(image_dir):
     paths = [os.path.join(image_dir, file) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))]
@@ -35,7 +36,7 @@ def transform_exif_fraction_to_float(fraction):
     if(len(numbers) == 1):
         return numbers[0]
     else:
-        numbers[1] = 1<<(int(numbers[1])-1).bit_length()
+        numbers[1] = (2**(math.ceil(math.log(numbers[1], 2))))
 
     return numbers[0]/numbers[1]
 
