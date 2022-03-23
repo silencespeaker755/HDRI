@@ -4,7 +4,7 @@ import os
 from utils import draw_inverse_response_curve
 from imageIO import read_images
 from joblib import Parallel, delayed
-
+import cv2
 from debevec import Debevec
 from robertson import RobertsonHDR
 
@@ -48,10 +48,11 @@ if __name__ == "__main__":
 
     else:
         rb = RobertsonHDR(LDR_images, exposure_times, 256)
-        rb.process_radiance_map([t["radiance"] for t in outputs_format], epoch = args.epoch)
+        
+        rb.process_radiance_map([t["radiance"] for t in outputs_format], epoch = int(args.epoch))
 
         for index, output in enumerate(outputs_format):
-            draw_inverse_response_curve(rb.gCurves[index], output["CRF"], color=output["color"])
+            draw_inverse_response_curve(np.log(rb.gCurves[index]), output["CRF"], color=output["color"])
         
 
 
