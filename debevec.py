@@ -73,34 +73,29 @@ class Debevec:
     
         return x[:256]
     
-    #def threaded(fn):
-    #    def wrapper(*args):
-    #        thread = Thread(target=fn, args=args)
-    #        thread.daemon = True
-    #        thread.start()
-    #        return thread
-    #    return wrapper
-    
-    def reconstruct_irradiance_image(self, image, irradiance_map, output):
+    def reconstruct_irradiance_image(self, image, inverse_CRF, output):
         exposure_time_ln = [np.log(p) for p in self.exposure_times]
-        
 
-        image = image.T
-        pixels, samples = image.shape
-        result = []
-        with tqdm(total=pixels) as pbar: 
-            for i in range(pixels):
-                total_Ei = 0
-                total_weight = 0
-                for j in range(samples):
-                    ei = image[i][j]
-                    weight_ei = self.weighting(ei)
-                    total_Ei += weight_ei * (irradiance_map[ei] - exposure_time_ln[j])
-                    total_weight += weight_ei
+        samples, pixels = image.shape
+        # result = []
 
-                result.append(total_Ei / total_weight)
-                pbar.update(1)
+        exposures = [inverse_CRF[image[i]] - exposure_time_ln[i] for i in range(samples)]
+        exposures = np.array(exposures)
+        exposure_average = np.average(exposures, axis=0, weights=[self.weighting(image)])
+
+        # with tqdm(total=pixels) as pbar: 
+        #     for i in range(pixels):
+        #         total_Ei = 0
+        #         total_weight = 0
+        #         for j in range(samples):
+        #             ei = image[i][j]
+        #             weight_ei = self.weighting(ei)
+        #             total_Ei += weight_ei * (inverse_CRF[ei] - exposure_time_ln[j])
+        #             total_weight += weight_ei
+
+        #         result.append(total_Ei / total_weight)
+        #         pbar.update(1)
         
-        result = np.array(np.exp(result))
+        # result = np.array(np.exp(result))ㄍㄛ
         
-        np.save(output, result.reshape(self.shape))
+        np.save(output, exposure_average.reshape(self.shape))
