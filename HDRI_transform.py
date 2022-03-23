@@ -17,7 +17,7 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--phi" , default=10 )
     args = parser.parse_args()
 
-    target_dir = args.dir
+    target_dir = args.target_dir
     method = args.method
 
     B = np.load(args.blue)
