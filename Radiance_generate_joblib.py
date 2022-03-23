@@ -3,6 +3,7 @@ import argparse
 import os
 from utils import draw_inverse_response_curve
 from imageIO import read_images
+from joblib import Parallel, delayed
 
 from debevec import Debevec
 from robertson import RobertsonHDR
@@ -37,25 +38,13 @@ if __name__ == "__main__":
 
         points = debevec.pick_evaluation_points(pixels, 100)
         
-        inverse_CRF_B = debevec.generate_inverse_response_curve(sample_points=B[:, points])
-        draw_inverse_response_curve(inverse_CRF_B, outputs_format[0]["CRF"], color=outputs_format[0]["color"])
+        joblist = []
+        for index, image in enumerate([B, G, R]):
+            inverse_CRF = debevec.generate_inverse_response_curve(sample_points=image[:, points])
+            draw_inverse_response_curve(inverse_CRF, outputs_format[index]["CRF"], color=outputs_format[index]["color"])
+            joblist.append(delayed(debevec.reconstruct_irradiance_image)(image, inverse_CRF, outputs_format[index]["radiance"]))
         
-        inverse_CRF_G = debevec.generate_inverse_response_curve(sample_points=G[:, points])
-        draw_inverse_response_curve(inverse_CRF_G, outputs_format[1]["CRF"], color=outputs_format[1]["color"])
-        
-        inverse_CRF_R = debevec.generate_inverse_response_curve(sample_points=R[:, points])
-        draw_inverse_response_curve(inverse_CRF_R, outputs_format[2]["CRF"], color=outputs_format[2]["color"])
-        
-        threads = [None] * 3
-        print(threads)
-        threads[0] = debevec.reconstruct_irradiance_image(B, inverse_CRF_B, outputs_format[0]["radiance"])
-        
-        threads[1] = debevec.reconstruct_irradiance_image(G, inverse_CRF_G, outputs_format[1]["radiance"])
-
-        threads[2] = debevec.reconstruct_irradiance_image(R, inverse_CRF_R, outputs_format[2]["radiance"])
-
-        for thread in threads:
-            thread.join()
+        Parallel(n_jobs=-1, backend="multiprocessing")(joblist)
 
     else:
         rb = RobertsonHDR(LDR_images, exposure_times, 256)

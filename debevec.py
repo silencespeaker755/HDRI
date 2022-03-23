@@ -73,14 +73,14 @@ class Debevec:
     
         return x[:256]
     
-    def threaded(fn):
-        def wrapper(*args):
-            thread = Thread(target=fn, args=args)
-            thread.daemon = True
-            return thread
-        return wrapper
+    #def threaded(fn):
+    #    def wrapper(*args):
+    #        thread = Thread(target=fn, args=args)
+    #        thread.daemon = True
+    #        thread.start()
+    #        return thread
+    #    return wrapper
     
-    @threaded
     def reconstruct_irradiance_image(self, image, irradiance_map, output):
         exposure_time_ln = [np.log(p) for p in self.exposure_times]
         
