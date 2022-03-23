@@ -19,6 +19,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     target_dir = args.save_dir
+    if(not os.path.exists(target_dir)):
+        os.mkdir(target_dir)
+
     dir_path = os.path.join(args.source_dir)
     LDR_images, exposure_times = read_images(dir_path)
 

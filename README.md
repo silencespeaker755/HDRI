@@ -59,11 +59,11 @@
 ```
 3. Generates **HDR image** according to blue, green and red .npy files.
 ```powershell
-    python3 HDRI_generate.py -b <blue> -g <green> -r <red> [-d <target_dir>] [-o <output>]    
+    python3 HDRI_generate.py -b <blue> -g <green> -r <red> -d <target_dir> [-o <output>]    
 ```
 4. According to different tonemapping methods, generates **LDR image** with blue, green and red .npy files.
 ```powershell
-    python3 HDRI_transform.py -b <blue> -g <green> -r <red> -m <method> [-d <target_dir>] [-o <output>]
+    python3 HDRI_transform.py -b <blue> -g <green> -r <red> -m <method> -d <target_dir>    [-o <output>]
 ```
 
 ### Aditional options
@@ -87,6 +87,10 @@ HDRI_transform.py:
 #### Debevec Implementation
 
 ```powershell
+sh sh/debevec.sh
+```
+or
+```powershell
 # every argument is already set default value for debevec
 python3 Radiance_generate.py
 python3 HDRI_generate.py
@@ -95,6 +99,10 @@ python3 HDRI_transform.py
 
 #### Robertson Implementation
 
+```powershell
+sh sh/robertson.sh
+```
+or
 ```powershell
 python3 Radiance_generate.py -s Photos/JPG -d RobertsonData -m robertson
 python3 HDRI_generate.py -b RobertsonData/Radiance_B.npy -g RobertsonData/Radiance_G.npy -r RobertsonData/Radiance_R.npy -d RobertsonData
