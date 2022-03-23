@@ -3,3 +3,4 @@ opencv-python==4.5.5.64
 ExifRead==2.3.2
 tqdm==4.63.0
 matplotlib==3.5.1
+joblib==1.1.0

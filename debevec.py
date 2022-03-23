@@ -10,14 +10,15 @@ class Debevec:
         self.exposure_times = exposure_times
         self.shape = images[0].shape[:2]
 
-    def weighting(self, pixels, min=1, max=254):
-        # calculate weight coefficient according to pixel
-        #print(pixel)
+    def weighting(self, pixels, min=0, max=255):
         center = (min+max)/2
         return np.where(pixels > center, abs(max - pixels), abs(pixels - min))
-        #if pixel > (min+max)/2:
-        #    return abs(max - pixel)
-        #return abs(pixel - min)
+
+    def single_weighting(self, pixel, min=0, max=255):
+        # calculate weight coefficient according to pixel
+        if pixel > (min+max)/2:
+           return abs(max - pixel)
+        return abs(pixel - min)
 
     def split_BGR_images(self):
         B = []
@@ -51,7 +52,7 @@ class Debevec:
             delta_time = exposure_time_ln[i]
             for j in range(n):
                 point = sample_points[i][j]
-                weight_pixel = self.weighting(point)
+                weight_pixel = self.single_weighting(point)
                 A[current_row, point] = weight_pixel
                 A[current_row, 256+j] = -weight_pixel
                 B[current_row] = weight_pixel * delta_time
@@ -65,7 +66,7 @@ class Debevec:
 
         # delta time section
         for i in range(254):
-            weight_pixel = self.weighting(i+1)
+            weight_pixel = self.single_weighting(i+1)
             A[current_row, i]   = weight_pixel
             A[current_row, i+1] = weight_pixel * -2
             A[current_row, i+2] = weight_pixel
@@ -80,28 +81,11 @@ class Debevec:
         exposure_time_ln = [np.log(p) for p in self.exposure_times]
 
         samples, pixels = image.shape
-        # result = []
 
         exposures = [inverse_CRF[image[i]] - exposure_time_ln[i] for i in range(samples)]
         exposures = np.array(exposures)
-        print(exposures.shape)
-        w = self.weighting(image)
-        print(w.shape)
+
         exposure_average = np.average(exposures, axis=0, weights=self.weighting(image))
-
-        # with tqdm(total=pixels) as pbar: 
-        #     for i in range(pixels):
-        #         total_Ei = 0
-        #         total_weight = 0
-        #         for j in range(samples):
-        #             ei = image[i][j]
-        #             weight_ei = self.weighting(ei)
-        #             total_Ei += weight_ei * (inverse_CRF[ei] - exposure_time_ln[j])
-        #             total_weight += weight_ei
-
-        #         result.append(total_Ei / total_weight)
-        #         pbar.update(1)
+        result = np.array(np.exp(exposure_average))
         
-        # result = np.array(np.exp(result))ㄍㄛ
-        
-        np.save(output, exposure_average.reshape(self.shape))
+        np.save(output, result.reshape(self.shape))
