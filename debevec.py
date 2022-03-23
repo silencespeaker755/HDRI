@@ -10,11 +10,14 @@ class Debevec:
         self.exposure_times = exposure_times
         self.shape = images[0].shape[:2]
 
-    def weighting(self, pixel, min=1, max=254):
+    def weighting(self, pixels, min=1, max=254):
         # calculate weight coefficient according to pixel
-        if pixel > (min+max)/2:
-            return abs(max - pixel)
-        return abs(pixel - min)
+        #print(pixel)
+        center = (min+max)/2
+        return np.where(pixels > center, abs(max - pixels), abs(pixels - min))
+        #if pixel > (min+max)/2:
+        #    return abs(max - pixel)
+        #return abs(pixel - min)
 
     def split_BGR_images(self):
         B = []
@@ -81,7 +84,10 @@ class Debevec:
 
         exposures = [inverse_CRF[image[i]] - exposure_time_ln[i] for i in range(samples)]
         exposures = np.array(exposures)
-        exposure_average = np.average(exposures, axis=0, weights=[self.weighting(image)])
+        print(exposures.shape)
+        w = self.weighting(image)
+        print(w.shape)
+        exposure_average = np.average(exposures, axis=0, weights=self.weighting(image))
 
         # with tqdm(total=pixels) as pbar: 
         #     for i in range(pixels):

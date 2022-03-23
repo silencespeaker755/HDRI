@@ -42,9 +42,10 @@ if __name__ == "__main__":
         for index, image in enumerate([B, G, R]):
             inverse_CRF = debevec.generate_inverse_response_curve(sample_points=image[:, points])
             draw_inverse_response_curve(inverse_CRF, outputs_format[index]["CRF"], color=outputs_format[index]["color"])
-            joblist.append(delayed(debevec.reconstruct_irradiance_image)(image, inverse_CRF, outputs_format[index]["radiance"]))
+            debevec.reconstruct_irradiance_image(image, inverse_CRF, outputs_format[index]["radiance"])
+            # joblist.append(delayed(debevec.reconstruct_irradiance_image)(image, inverse_CRF, outputs_format[index]["radiance"]))
         
-        Parallel(n_jobs=-1, backend="multiprocessing")(joblist)
+        # Parallel(n_jobs=-1, backend="multiprocessing")(joblist)
 
     else:
         rb = RobertsonHDR(LDR_images, exposure_times, 256)
