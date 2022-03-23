@@ -41,6 +41,7 @@ class RobertsonHDR:
 
     def optimize_g(self, E_func, channel):
         # g(z_pixel) = 1/cnt * sum(all pixel's E value * t in time t)
+
         gm = np.zeros(self.ldr_size) 
         Em = np.zeros((self.ldr_size, 2))
         
@@ -105,7 +106,7 @@ class RobertsonHDR:
         
         for mission in threading_missions:
             mission.join()
-
+        
         for c in range(3):        
             np.save(savefiles[c], self.radianceMaps[c])
 

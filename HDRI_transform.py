@@ -5,16 +5,16 @@ from toneMapping import ToneMapping
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-b", "--blue"       , default="DebevecData/Radiance_B.npy")
-    parser.add_argument("-g", "--green"      , default="DebevecData/Radiance_B.npy")
-    parser.add_argument("-r", "--red"        , default="DebevecData/Radiance_B.npy")
-    parser.add_argument("-d", "--target_dir" , default="DebevecData")
-    parser.add_argument("-m", "--method"     , default="global")
-    parser.add_argument("-o", "--output"     , default="LDR.png")
-    parser.add_argument("-a", "--a"          , default=0.7)
-    parser.add_argument("-e", "--epsilon"    , default=0.01)
-    parser.add_argument("-s", "--scale"      , default=20)
-    parser.add_argument("-p", "--phi"        , default=20)
+    parser.add_argument("-b", "--blue"   , default="DebevecData/Radiance_B.npy")
+    parser.add_argument("-g", "--green"  , default="DebevecData/Radiance_G.npy")
+    parser.add_argument("-r", "--red"    , default="DebevecData/Radiance_R.npy")
+    parser.add_argument("-d", "--dir"    , default="DebevecData")
+    parser.add_argument("-m", "--method"    , default="global")
+    parser.add_argument("-o", "--output" , default="LDR_global.png")
+    parser.add_argument("-a", "--a" , default=0.7)
+    parser.add_argument("-e", "--epsilon" , default=0.05)
+    parser.add_argument("-s", "--scale" , default=15)
+    parser.add_argument("-p", "--phi" , default=10 )
     args = parser.parse_args()
 
     target_dir = args.target_dir
